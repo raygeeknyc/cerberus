@@ -15,7 +15,7 @@ Components required to implement:
 
 Here are some links to the parts:
 
-https://www.amazon.com/Transfer-Conveyor-Transmission-Furniture-Wheelchair/dp/B01F7AND88/ref=pd_sim_328_1?_encoding=UTF8&pd_rd_i=B01F7AND88&pd_rd_r=25N3Y83XW0QCW34XFGD8&pd_rd_w=IquxZ&pd_rd_wg=j7hVD&psc=1&refRID=25N3Y83XW0QCW34XFGD8
+* [wheels](https://www.amazon.com/Transfer-Conveyor-Transmission-Furniture-Wheelchair/dp/B01F7AND88/ref=pd_sim_328_1?_encoding=UTF8&pd_rd_i=B01F7AND88&pd_rd_r=25N3Y83XW0QCW34XFGD8&pd_rd_w=IquxZ&pd_rd_wg=j7hVD&psc=1&refRID=25N3Y83XW0QCW34XFGD8)
 http://www.robotshop.com/en/24-wheel-micro-continuous-rotation-fs90r-servo.html
 http://www.robotshop.com/en/9g-continuous-rotation-micro-servo.html
 http://www.robotshop.com/en/hc-sr04-ultrasonic-range-finder.html
