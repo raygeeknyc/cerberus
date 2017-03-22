@@ -2,16 +2,16 @@
 A fun project for an arduino
 
 Components required to implement:
-2 Ultrasonic (PING) sensors
-2 Continuous rotation servos with wheels
-1 Photovoltaic resistor
-1 LED
-1 Battery Pack and batteries(4 AAA)
-1 Adafruit Pro Trinket microcontroller
-1 Nylon Caster
-1 Full size Breadboard (830 tie points)
-1 Piezo Buzzer
-M2M jumper wires and sufficient pin headers to connect trinket and servos to breadboard
+* 2 Ultrasonic (PING) sensors
+* 2 Continuous rotation servos with wheels
+* 1 Photovoltaic resistor
+* 1 LED
+* 1 Battery Pack and batteries(4 AAA)
+* 1 Adafruit Pro Trinket microcontroller
+* 1 Nylon Caster
+* 1 Full size Breadboard (830 tie points)
+* 1 Piezo Buzzer
+* M2M jumper wires and sufficient pin headers to connect trinket and servos to breadboard
 
 Here are some links to the parts:
 
