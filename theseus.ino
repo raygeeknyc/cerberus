@@ -10,3 +10,6 @@
 #define PIN_SERVO_RIGHT 10
 #define PIN_SPEAKER 11
 #define PIN_PHOTO A0
+
+
+TODO(bigjoe2000): Add some methods cribbed from raygeek
