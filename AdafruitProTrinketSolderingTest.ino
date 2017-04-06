@@ -1,10 +1,8 @@
 /**
   Set up an Adafruit Pro Trinket 
-
   On a breadboard, set up a resistor and LED in series with the GND pin of your trinket.
   
   Run a jumper cable from the LED to one of the input pins.
-
   
   The LED should blink only once per cycle (each cycle is denoted by the onboard LED blinking)
   
@@ -13,7 +11,6 @@
   Input pins are   RX,TX,3,4,5,6,8,9,10,11,12,13,A0,A1,A2,A3,A4,A5
   
   Here's a diagram of the pin locations
-
   https://learn.adafruit.com/introducing-pro-trinket/pinouts
 */
 
@@ -31,9 +28,12 @@ void setup() {
 }
 
 void loop() {
-  for (int i = 0; i < length; i++) {
+  for (int i = 0; i < length/2; i++) {
     digitalWrite(PINS[i], HIGH);
-    delay(200);
+    delay(50);
     digitalWrite(PINS[i], LOW);
+    digitalWrite(PINS[i + length/2], HIGH);
+    delay(50);
+    digitalWrite(PINS[i + length/2], LOW);
   }
 }
