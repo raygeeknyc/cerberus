@@ -6,7 +6,7 @@
 #define MAX_PING_SENSOR_DISTANCE 60
 #include <TimerFreeTone.h>
 
-# Unused for now
+// Unused for now
 #define _TRINKET
 // define _DEBUG if you want LOTS of Serial output
 // #define _DEBUG
