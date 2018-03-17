@@ -10,7 +10,9 @@
 #define _TRINKET
 // define _DEBUG if you want LOTS of Serial output
 // #define _DEBUG
- 
+
+#define BUILTIN_LED 13
+
 // Define which pins each of our sensors and actuators are connected to
 #define PIN_PING_TRIGGER_RIGHT 3
 #define PIN_PING_ECHO_RIGHT 4
@@ -119,7 +121,22 @@ NewPing sonarR(PIN_PING_TRIGGER_RIGHT, PIN_PING_ECHO_RIGHT, MAX_PING_SENSOR_DIST
 int current_dir, last_dir;
 int sensor_normalization_delta;
 
+void blinkConfirm() {
+  for (int i=0; i<3; i++) {
+    for (int j=0; j<5; j++) {
+      digitalWrite(BUILTIN_LED, HIGH);
+      delay(100);
+      digitalWrite(BUILTIN_LED, LOW);
+      delay(50);
+    }
+    delay(500);
+  }
+}
+
 void setup() {
+  pinMode(BUILTIN_LED, OUTPUT);
+  blinkConfirm();
+
   #ifdef _DEBUG
   Serial.begin(9600);
   Serial.println("setup");
