@@ -2,9 +2,9 @@
 
 #include <Servo.h>
 #include <NewPing.h>
+#include <TimerFreeTone.h>
 
 #define MAX_PING_SENSOR_DISTANCE 60
-#include <TimerFreeTone.h>
 
 // Unused for now
 #define _TRINKET
@@ -59,7 +59,6 @@ const int SNORE_DURATION_MS = SNORE_DURATION_SECS * 1000;
 #define BREATHE_STEP_DUR_MS 50
 int breathe_dir;
 
-// Imported from https://github.com/raygeeknyc/photovore/blob/master/photovore.ino
 Servo left_motor;
 Servo right_motor;
 
@@ -93,15 +92,13 @@ Servo right_motor;
 
 #define SENSOR_SAMPLES 5
 
-#define MAX_SENSOR_READING 1023  // Used to seed sensor pair normalization
+#define MAX_SENSOR_READING 1023  // A max value used to seed sensor normalizationas
 #define LIGHT_CHANGE_THRESHOLD 200
 #define PING_CHANGE_THRESHOLD_CM 15
 
 // How long to spin while callibrating the sensor pair
 #define CALLIBRATION_DUR_MS 1000
 
-// How long to pause between steps while spinning to normalize the sensor pair
-#define SPIN_STEP_DELAY_MS 15
 #define DIR_STOP 0
 #define DIR_RIGHT 1
 #define DIR_LEFT 2
@@ -121,16 +118,27 @@ NewPing sonarR(PIN_PING_TRIGGER_RIGHT, PIN_PING_ECHO_RIGHT, MAX_PING_SENSOR_DIST
 int current_dir, last_dir;
 int sensor_normalization_delta;
 
+/**
+ * Blink 3-2-1 as a distinctive signature of startup
+ */
 void blinkConfirm() {
-  for (int i=0; i<3; i++) {
-    for (int j=0; j<5; j++) {
-      digitalWrite(BUILTIN_LED, HIGH);
-      delay(100);
-      digitalWrite(BUILTIN_LED, LOW);
-      delay(50);
-    }
-    delay(500);
+  for (int j=0; j<3; j++) {
+    digitalWrite(BUILTIN_LED, HIGH);
+    delay(200);
+    digitalWrite(BUILTIN_LED, LOW);
+    delay(50);
   }
+  delay(500);
+  for (int j=0; j<2; j++) {
+    digitalWrite(BUILTIN_LED, HIGH);
+    delay(200);
+    digitalWrite(BUILTIN_LED, LOW);
+    delay(50);
+  }
+  delay(500);
+  digitalWrite(BUILTIN_LED, HIGH);
+  delay(200);
+  digitalWrite(BUILTIN_LED, LOW);
 }
 
 void setup() {
@@ -141,13 +149,16 @@ void setup() {
   Serial.begin(9600);
   Serial.println("setup");
   #endif
-  pinMode(PIN_BUZZER, OUTPUT);
-  pinMode(PIN_LED, OUTPUT);
-  pinMode(PIN_CDS, INPUT);
+
   left_motor.attach(PIN_SERVO_LEFT);
   right_motor.attach(PIN_SERVO_RIGHT);
   stop(DIR_LEFT);
   stop(DIR_RIGHT);
+
+  pinMode(PIN_BUZZER, OUTPUT);
+  pinMode(PIN_LED, OUTPUT);
+  pinMode(PIN_CDS, INPUT);
+
   weave_phase = 0;
   weave_dir = 1;
   next_breathe_at = 0L;
@@ -157,10 +168,12 @@ void setup() {
   next_ping_at = 0L;
   shine_brightness = 0;
   sensor_normalization_delta = 0;
-  playTune();
-  digitalWrite(PIN_BUZZER, LOW);
   current_distance_l = 100;
   current_distance_r = 100;
+
+  analogWrite(PIN_LED, 127);
+  playTune();
+  digitalWrite(PIN_BUZZER, LOW);
   analogWrite(PIN_LED, 10);
 }
 
@@ -186,7 +199,7 @@ int smooth(int array[], int len) {
   return total / (len - 2);
 }
 
-void readSensors() {  // raygeeknyc@
+void readSensors() {
   wakeup_from_sensors = false;
   int l = getLightLevel();
   light_delta = light_level - l;
@@ -243,7 +256,7 @@ bool timeToSnore() {
 }
 
 /* Return true if we are currently sleeping, false if we're awake */
-bool isSleeping() {  // raygeeknyc@
+bool isSleeping() {
   bool sleeping = sleep_until > millis();
   #ifdef _DEBUG
   Serial.print("sleep until ");
@@ -386,7 +399,7 @@ bool isClose(const int distance) {
 }
 
 /* Take the current step in moving about */
-void roam() {  // raygeeknyc@
+void roam() {
   #ifdef _DEBUG
   Serial.println("roam ");
   #endif
@@ -402,7 +415,7 @@ void roam() {  // raygeeknyc@
 }
 
 /* Pulse the LED in sleep mode */
-void breathe() {  // raygeeknyc@
+void breathe() {
   if (!next_breathe_at || (next_breathe_at < millis())) {
     #ifdef _DEBUG
     Serial.println("next breathe step");
@@ -424,7 +437,7 @@ void breathe() {  // raygeeknyc@
 }
 
 /* Wake up, set flag, maybe make a waking noise or flash the LED */
-void awaken() {  // raygeeknyc@
+void awaken() {
   sleep_until = 0l;
   awake_since = millis();
   next_breathe_at = 0;
@@ -451,7 +464,7 @@ void updateLed() {
 
 /* Make a sleeping sound in sleep mode.
   Since this function blocks, update the breathing state LED */
-void snore() {  // raygeeknyc@
+void snore() {
     beep(PIN_BUZZER, 125, 75);
     breathe();
     updateLed();
@@ -569,7 +582,7 @@ bool checkForWake() {
 }
 
 void loop() {
-  readSensors();  // raygeeknyc@
+  readSensors();
   #ifdef _DEBUG
   Serial.print("LEFT: ");
   Serial.print(current_distance_l);
@@ -579,27 +592,27 @@ void loop() {
   Serial.println(light_level);
   Serial.flush();
   #endif
-  updateLed();  // raygeeknyc@ : done
-  if (!isSleeping()) {  // raygeeknyc@ : done
+  updateLed();
+  if (!isSleeping()) {
     if (!isShining()) {
       shine_brightness = 0;
     }
     if (checkForSleep()) {
        sleep(SLEEP_DURATION_SECS);
     } else {
-      roam();  // raygeeknyc@ : done
+      roam();
     }
   }
-  if (isSleeping()) {  // raygeeknyc@ : done
+  if (isSleeping()) {
     #ifdef _DEBUG
     Serial.println("sleeping");
     #endif
-    breathe();  // raygeeknyc@ : done
-    if (checkForWake() || hasBeenAwoken()) {  // raygeeknyc@
-      awaken();  // raygeeknyc@ : done
+    breathe();
+    if (checkForWake() || hasBeenAwoken()) {
+      awaken();
     } else {
       if (timeToSnore()) {
-        snore();  // raygeeknyc@ : done
+        snore();
       }
     }
   }
