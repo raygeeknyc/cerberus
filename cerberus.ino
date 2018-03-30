@@ -122,23 +122,19 @@ int sensor_normalization_delta;
  * Blink 3-2-1 as a distinctive signature of startup
  */
 void blinkConfirm() {
-  for (int j=0; j<3; j++) {
-    digitalWrite(BUILTIN_LED, HIGH);
-    delay(200);
-    digitalWrite(BUILTIN_LED, LOW);
-    delay(50);
-  }
-  delay(500);
-  for (int j=0; j<2; j++) {
-    digitalWrite(BUILTIN_LED, HIGH);
-    delay(200);
-    digitalWrite(BUILTIN_LED, LOW);
-    delay(50);
-  }
+  digitalWrite(BUILTIN_LED, HIGH);
+  delay(1000);
+  digitalWrite(BUILTIN_LED, LOW);
   delay(500);
   digitalWrite(BUILTIN_LED, HIGH);
-  delay(200);
+  delay(1000);
   digitalWrite(BUILTIN_LED, LOW);
+  delay(500);
+  digitalWrite(BUILTIN_LED, HIGH);
+
+  delay(1000);
+  digitalWrite(BUILTIN_LED, LOW);
+  delay(500);
 }
 
 void setup() {
@@ -171,7 +167,7 @@ void setup() {
   current_distance_l = 100;
   current_distance_r = 100;
 
-  analogWrite(PIN_LED, 127);
+  analogWrite(PIN_LED, 200);
   playTune();
   digitalWrite(PIN_BUZZER, LOW);
   analogWrite(PIN_LED, 10);
