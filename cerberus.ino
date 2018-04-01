@@ -140,7 +140,7 @@ void blinkConfirm() {
 void setup() {
   pinMode(BUILTIN_LED, OUTPUT);
   blinkConfirm();
-  pinMode(BUILTIN_LED, INPUT);  # needed for use as echo later - newping doesn't reset it
+  pinMode(BUILTIN_LED, INPUT);  // Needed for use as echo later - newping doesn't reset it
  
   #ifdef _DEBUG
   Serial.begin(9600);
