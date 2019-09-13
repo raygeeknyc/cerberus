@@ -1,6 +1,6 @@
 // Cerberus - a two headed robot dog
 
-#include <Servo.h>
+#include <Adafruit_SoftServo.h>  // SoftwareServo (works on non PWM pins)
 #include <TimerFreeTone.h>
 #include "PingsensorPins.h"
 
@@ -60,8 +60,8 @@ const int SNORE_DURATION_MS = SNORE_DURATION_SECS * 1000;
 #define BREATHE_STEP_DUR_MS 50
 int breathe_dir;
 
-Servo left_motor;
-Servo right_motor;
+Adafruit_SoftServo left_motor;
+Adafruit_SoftServo right_motor;
 
 // Define these based on your servos and controller, the values to cause your servos
 // to spin in opposite directions at approx the same speed.
