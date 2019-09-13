@@ -1,10 +1,11 @@
 // Cerberus - a two headed robot dog
 
 #include <Servo.h>
-#include <NewPing.h>
 #include <TimerFreeTone.h>
+#include "PingsensorPins.h"
 
 #define MAX_PING_SENSOR_DISTANCE 60
+#define PING_SENSOR_SAMPLES 5
 
 // Unused for now
 #define _TRINKET
@@ -68,7 +69,7 @@ Servo right_motor;
 #define CW 150
 
 #define CCW_SLOW 80
-#define CW_SLOW 100 
+#define CW_SLOW 100
 
 #define CW_STOP 90
 #define CCW_STOP 90
@@ -112,15 +113,15 @@ const int INACTIVITY_TIME_TO_NAP_MS = INACTIVITY_TIME_TO_NAP_SECS * 1000;
 const int ACTIVITY_TIME_TO_NAP_MS =  ACTIVITY_TIME_TO_NAP_SECS * 1000;
 #define SLEEP_DURATION_SECS 15
 
-NewPing sonarL(PIN_PING_TRIGGER_LEFT, PIN_PING_ECHO_LEFT, MAX_PING_SENSOR_DISTANCE); // NewPing setup of pins and maximum distance.
-NewPing sonarR(PIN_PING_TRIGGER_RIGHT, PIN_PING_ECHO_RIGHT, MAX_PING_SENSOR_DISTANCE); // NewPing setup of pins and maximum distance.
+PingSensorPins sonarL = {PIN_PING_TRIGGER_LEFT, PIN_PING_ECHO_LEFT};
+PingSensorPins sonarR = {PIN_PING_TRIGGER_RIGHT, PIN_PING_ECHO_RIGHT};
 
 int current_dir, last_dir;
 int sensor_normalization_delta;
 
 /**
- * Blink 3-2-1 as a distinctive signature of startup
- */
+   Blink 3-2-1 as a distinctive signature of startup
+*/
 void blinkConfirm() {
   digitalWrite(BUILTIN_LED, HIGH);
   delay(1000);
@@ -140,12 +141,12 @@ void blinkConfirm() {
 void setup() {
   pinMode(BUILTIN_LED, OUTPUT);
   blinkConfirm();
-  pinMode(BUILTIN_LED, INPUT);  // Needed for use as echo later - we stole it away from a NewPing() and the library doesn't reset it
- 
-  #ifdef _DEBUG
+  pinMode(BUILTIN_LED, INPUT);
+
+#ifdef _DEBUG
   Serial.begin(9600);
   Serial.println("setup");
-  #endif
+#endif
 
   left_motor.attach(PIN_SERVO_LEFT);
   right_motor.attach(PIN_SERVO_RIGHT);
@@ -203,13 +204,13 @@ void readSensors() {
   light_level = l;
   // Don't read the ping sensors too often
   if (next_ping_at > millis()) {
-    #ifdef _DEBUG
+#ifdef _DEBUG
     Serial.print("Reuse old  distances. ");
     Serial.print("right: ");
     Serial.print(current_distance_r);
     Serial.print(",left: ");
     Serial.println(current_distance_l);
-    #endif
+#endif
   } else {
     prev_distance_l = current_distance_l;
     prev_distance_r = current_distance_r;
@@ -225,9 +226,9 @@ void readSensors() {
       || current_distance_r <= CLOSE_PROXIMITY_THRESHOLD) {
     last_sensor_activity_at = millis();
     wakeup_from_sensors = true;
-    #ifdef _DEBUG
+#ifdef _DEBUG
     Serial.println("sensor input");
-    #endif
+#endif
   }
 }
 
@@ -243,31 +244,31 @@ int getLightLevel() {
 bool timeToSnore() {
   int waking_in = sleep_until - millis();
   bool snoring = waking_in < SNORE_DURATION_MS;
-  #ifdef _DEBUG
+#ifdef _DEBUG
   Serial.print("Waking in ");
   Serial.println(waking_in);
   Serial.print(" snoring ");
   Serial.println(snoring);
-  #endif
+#endif
   return snoring;
 }
 
 /* Return true if we are currently sleeping, false if we're awake */
 bool isSleeping() {
   bool sleeping = sleep_until > millis();
-  #ifdef _DEBUG
+#ifdef _DEBUG
   Serial.print("sleep until ");
   Serial.print(sleep_until);
   Serial.print(" sleeping ");
   Serial.println(sleeping);
-  #endif
+#endif
   return sleeping;
 }
 
 void sleep(const unsigned sleep_duration_secs) {
-  #ifdef _DEBUG
+#ifdef _DEBUG
   Serial.println("Sleep!");
-  #endif
+#endif
   sleep_until = millis() + (sleep_duration_secs * 1000);
   stop(DIR_LEFT);
   stop(DIR_RIGHT);
@@ -275,10 +276,10 @@ void sleep(const unsigned sleep_duration_secs) {
 }
 
 void steerTowards(int bias) {
-  #ifdef _DEBUG
+#ifdef _DEBUG
   Serial.print("steertowards ");
   Serial.println(bias);
-  #endif
+#endif
   if (bias == -1) {
     fwd(DIR_RIGHT);
     slow(DIR_LEFT);
@@ -292,13 +293,13 @@ void steerTowards(int bias) {
 }
 
 void weave() {
-  #ifdef _DEBUG
+#ifdef _DEBUG
   Serial.println("weave");
-  #endif
+#endif
   if (weave_phase_at < millis()) {
-    #ifdef _DEBUG
+#ifdef _DEBUG
     Serial.println("weave phase change");
-    #endif
+#endif
     weave_phase += weave_dir;
     if ((weave_phase == 0) || (weave_phase == (sizeof(weave_bias) / sizeof(int) - 1))) {
       weave_dir *= -1;
@@ -309,9 +310,9 @@ void weave() {
 }
 
 void withdraw() {
-  #ifdef _DEBUG
+#ifdef _DEBUG
   Serial.println("withdraw");
-  #endif
+#endif
   flashLed();
   alarm();
   reverse(DIR_LEFT);
@@ -325,65 +326,65 @@ void withdraw() {
 
 void slow(int side) {
   if (side == DIR_LEFT) {
-    #ifdef _DEBUG
+#ifdef _DEBUG
     Serial.println("slow left");
-    #endif
+#endif
     left_motor.write(SERVO_L_FWDSLOW);
   } else {
-    #ifdef _DEBUG
+#ifdef _DEBUG
     Serial.println("slow right");
-    #endif
+#endif
     right_motor.write(SERVO_R_FWDSLOW);
   }
 }
 
 void fwd(int side) {
   if (side == DIR_LEFT) {
-    #ifdef _DEBUG
+#ifdef _DEBUG
     Serial.println("fwd left");
-    #endif
+#endif
     left_motor.write(SERVO_L_FWD);
   } else {
-    #ifdef _DEBUG
+#ifdef _DEBUG
     Serial.println("fwd right");
-    #endif
+#endif
     right_motor.write(SERVO_R_FWD);
   }
 }
 
 void reverse(int side) {
   if (side == DIR_LEFT) {
-    #ifdef _DEBUG
+#ifdef _DEBUG
     Serial.println("bwd left");
-    #endif
+#endif
     left_motor.write(SERVO_L_BWD);
   } else {
-    #ifdef _DEBUG
+#ifdef _DEBUG
     Serial.println("bwd right");
-    #endif
+#endif
     right_motor.write(SERVO_R_BWD);
   }
 }
 
 void stop(int side) {
   if (side == DIR_LEFT) {
-    #ifdef _DEBUG
+#ifdef _DEBUG
     Serial.println("stop left");
-    #endif
-   left_motor.write(SERVO_L_STOP);
+#endif
+    left_motor.write(SERVO_L_STOP);
   } else {
-    #ifdef _DEBUG
+#ifdef _DEBUG
     Serial.println("stop right");
-    #endif
+#endif
     right_motor.write(SERVO_R_STOP);
   }
 }
 
 void turnFrom(const int side) {
-  #ifdef _DEBUG
+#ifdef _DEBUG
   Serial.print("turnFrom ");
-  Serial.println((side == DIR_LEFT)?"left":"right");
-  #endif
+  Serial.println((side == DIR_LEFT) ? "left" : "right");
+#endif
   fwd(side);
   reverse((side == DIR_LEFT) ? DIR_RIGHT : DIR_LEFT);
   delay(TURN_DUR_MS);
@@ -397,9 +398,9 @@ bool isClose(const int distance) {
 
 /* Take the current step in moving about */
 void roam() {
-  #ifdef _DEBUG
+#ifdef _DEBUG
   Serial.println("roam ");
-  #endif
+#endif
   if (!isClose(current_distance_l) && !isClose(current_distance_r)) {
     weave();
   } else if (isClose(current_distance_l) && isClose(current_distance_r)) {
@@ -414,21 +415,21 @@ void roam() {
 /* Pulse the LED in sleep mode */
 void breathe() {
   if (!next_breathe_at || (next_breathe_at < millis())) {
-    #ifdef _DEBUG
+#ifdef _DEBUG
     Serial.println("next breathe step");
-    #endif
+#endif
     next_breathe_at = millis() + BREATHE_STEP_DUR_MS;
     shine_brightness += BREATHE_STEP * ((breathe_dir > 0) ? 1 : -1);
-    #ifdef _DEBUG
+#ifdef _DEBUG
     Serial.print("breath brightness ");
     Serial.println(shine_brightness);
-    #endif
+#endif
     if ((shine_brightness <= BREATHE_MIN) || (shine_brightness >= BREATHE_MAX)) {
       breathe_dir *= -1;
-      #ifdef _DEBUG
+#ifdef _DEBUG
       Serial.print("breath direction now ");
       Serial.println(breathe_dir);
-      #endif
+#endif
     }
   }
 }
@@ -462,12 +463,12 @@ void updateLed() {
 /* Make a sleeping sound in sleep mode.
   Since this function blocks, update the breathing state LED */
 void snore() {
-    beep(PIN_BUZZER, 125, 75);
-    breathe();
-    updateLed();
-    beep(PIN_BUZZER, 75, 75);
-    breathe();
-    updateLed();
+  beep(PIN_BUZZER, 125, 75);
+  breathe();
+  updateLed();
+  beep(PIN_BUZZER, 75, 75);
+  breathe();
+  updateLed();
 }
 
 void beep(unsigned char pin, int frequencyInHertz, long timeInMilliseconds) {
@@ -476,7 +477,7 @@ void beep(unsigned char pin, int frequencyInHertz, long timeInMilliseconds) {
 
 // The sound producing function for chips without tone() support
 void _noToneBeep(unsigned char pin, int frequencyInHertz, long timeInMilliseconds) {
-  
+
   // from http://web.media.mit.edu/~leah/LilyPad/07_sound_code.html
   int x;
   long delayAmount = (long)(1000000 / frequencyInHertz);
@@ -502,22 +503,22 @@ void burp() {
 }
 
 void playTune() {
- beep(PIN_BUZZER,NOTE_C4,1000);
- beep(PIN_BUZZER,NOTE_G4,1000);
- beep(PIN_BUZZER,NOTE_F4,250);
- beep(PIN_BUZZER,NOTE_E4,250);
- beep(PIN_BUZZER,NOTE_D4,250);
- beep(PIN_BUZZER,NOTE_C5,1000);
- beep(PIN_BUZZER,NOTE_G4,500);
- beep(PIN_BUZZER,NOTE_F4,250);
- beep(PIN_BUZZER,NOTE_E4,250);
- beep(PIN_BUZZER,NOTE_D4,250);
- beep(PIN_BUZZER,NOTE_C5,1000);
- beep(PIN_BUZZER,NOTE_G4,500);
- beep(PIN_BUZZER,NOTE_F4,250);
- beep(PIN_BUZZER,NOTE_E4,250);
- beep(PIN_BUZZER,NOTE_F4,250);
- beep(PIN_BUZZER,NOTE_D4,2000);
+  beep(PIN_BUZZER, NOTE_C4, 1000);
+  beep(PIN_BUZZER, NOTE_G4, 1000);
+  beep(PIN_BUZZER, NOTE_F4, 250);
+  beep(PIN_BUZZER, NOTE_E4, 250);
+  beep(PIN_BUZZER, NOTE_D4, 250);
+  beep(PIN_BUZZER, NOTE_C5, 1000);
+  beep(PIN_BUZZER, NOTE_G4, 500);
+  beep(PIN_BUZZER, NOTE_F4, 250);
+  beep(PIN_BUZZER, NOTE_E4, 250);
+  beep(PIN_BUZZER, NOTE_D4, 250);
+  beep(PIN_BUZZER, NOTE_C5, 1000);
+  beep(PIN_BUZZER, NOTE_G4, 500);
+  beep(PIN_BUZZER, NOTE_F4, 250);
+  beep(PIN_BUZZER, NOTE_E4, 250);
+  beep(PIN_BUZZER, NOTE_F4, 250);
+  beep(PIN_BUZZER, NOTE_D4, 2000);
 }
 
 int getLeftPing() {
@@ -528,20 +529,39 @@ int getRightPing() {
   return getPingSensorReading(sonarR);
 }
 
-int getPingSensorReading(NewPing sonar) {
-  int echoTime = sonar.ping_median(PING_SAMPLES);
-  int cm = sonar.convert_cm(echoTime);
-  if (cm == 0 || cm > MAX_PING_SENSOR_DISTANCE) {
-    #ifdef _DEBUG
+int _getSensorValue(PingSensorPins sonar) {
+  digitalWrite(sonar.trigger_pin, LOW);
+  delayMicroseconds(2);
+
+  digitalWrite(sonar.trigger_pin, HIGH);
+  delayMicroseconds(10);
+
+  digitalWrite(sonar.trigger_pin, LOW);
+  int duration = pulseIn(sonar.echo_pin, HIGH);
+
+  int distance = ((duration / 2) / 29.1) * 10;
+
+  return distance;
+}
+
+int getPingSensorReading(PingSensorPins sonar) {
+
+  int samples[PING_SENSOR_SAMPLES];
+  for (int i = 0; i < PING_SENSOR_SAMPLES; i++) {
+    samples[i] = _getSensorValue(sonar);
+  }
+  int echoTime = smooth(samples, PING_SENSOR_SAMPLES);
+  if (echoTime == 0 || echoTime > MAX_PING_SENSOR_DISTANCE) {
+#ifdef _DEBUG
     Serial.println("adjusting distance to max distance");
-    #endif
-    cm = MAX_PING_SENSOR_DISTANCE;
+#endif
+    echoTime = MAX_PING_SENSOR_DISTANCE;
   }
 #ifdef _DEBUG
   Serial.print("Distance ");
-  Serial.println(cm);
+  Serial.println(echoTime);
 #endif
-  return cm;
+  return echoTime;
 }
 
 bool hasBeenAwoken() {
@@ -554,21 +574,21 @@ bool checkForSleep() {
     return false;
   }
   if (awake_since && (millis() - awake_since) < MIN_TIME_AWAKE_MS) {
-    #ifdef _DEBUG
+#ifdef _DEBUG
     Serial.println("not sleeping due to recent awakening");
-    #endif
-   return false;
+#endif
+    return false;
   }
   if ((millis() - last_sensor_activity_at) > INACTIVITY_TIME_TO_NAP_MS) {
-    #ifdef _DEBUG
+#ifdef _DEBUG
     Serial.println("Nap due to lack of sensory input");
-    #endif
+#endif
     return true;
   }
   if ((millis() - awake_since) > ACTIVITY_TIME_TO_NAP_MS) {
-    #ifdef _DEBUG
+#ifdef _DEBUG
     Serial.println("Nap due to long activity");
-    #endif
+#endif
     return true;
   }
   return false;
@@ -580,7 +600,7 @@ bool checkForWake() {
 
 void loop() {
   readSensors();
-  #ifdef _DEBUG
+#ifdef _DEBUG
   Serial.print("LEFT: ");
   Serial.print(current_distance_l);
   Serial.print(", RIGHT: ");
@@ -588,22 +608,22 @@ void loop() {
   Serial.print(", LIGHT: ");
   Serial.println(light_level);
   Serial.flush();
-  #endif
+#endif
   updateLed();
   if (!isSleeping()) {
     if (!isShining()) {
       shine_brightness = 0;
     }
     if (checkForSleep()) {
-       sleep(SLEEP_DURATION_SECS);
+      sleep(SLEEP_DURATION_SECS);
     } else {
       roam();
     }
   }
   if (isSleeping()) {
-    #ifdef _DEBUG
+#ifdef _DEBUG
     Serial.println("sleeping");
-    #endif
+#endif
     breathe();
     if (checkForWake() || hasBeenAwoken()) {
       awaken();
