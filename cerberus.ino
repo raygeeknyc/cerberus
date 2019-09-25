@@ -1,7 +1,6 @@
 // Cerberus - a two headed robot dog
 
 #include <Adafruit_SoftServo.h>  // SoftwareServo (works on non PWM pins)
-#include <TimerFreeTone.h>
 #include "PingsensorPins.h"
 
 #define MAX_PING_SENSOR_DISTANCE 60
@@ -24,6 +23,7 @@
 #define PIN_SERVO_RIGHT 10
 #define PIN_BUZZER 11
 #define PIN_CDS A0
+#define PIN_TILT 5
 
 #define NOTE_C4 262
 #define NOTE_D4 294
@@ -118,6 +118,7 @@ PingSensorPins sonarR = {PIN_PING_TRIGGER_RIGHT, PIN_PING_ECHO_RIGHT};
 
 int current_dir, last_dir;
 int sensor_normalization_delta;
+bool current_tilt_sensor_value;
 
 /**
    Blink 3-2-1 as a distinctive signature of startup
@@ -142,7 +143,7 @@ void setup() {
   pinMode(BUILTIN_LED, OUTPUT);
   blinkConfirm();
   pinMode(BUILTIN_LED, INPUT);
-
+  
 #ifdef _DEBUG
   Serial.begin(9600);
   Serial.println("setup");
@@ -153,6 +154,7 @@ void setup() {
   stop(DIR_LEFT);
   stop(DIR_RIGHT);
 
+  pinMode(PIN_TILT, INPUT);
   pinMode(PIN_BUZZER, OUTPUT);
   pinMode(PIN_LED, OUTPUT);
   pinMode(PIN_CDS, INPUT);
@@ -463,62 +465,54 @@ void updateLed() {
 /* Make a sleeping sound in sleep mode.
   Since this function blocks, update the breathing state LED */
 void snore() {
-  beep(PIN_BUZZER, 125, 75);
+  beep(125, 75);
   breathe();
   updateLed();
-  beep(PIN_BUZZER, 75, 75);
+  beep(75, 75);
   breathe();
   updateLed();
 }
 
-void beep(unsigned char pin, int frequencyInHertz, long timeInMilliseconds) {
-  TimerFreeTone(pin, frequencyInHertz, timeInMilliseconds);
-}
-
-// The sound producing function for chips without tone() support
-void _noToneBeep(unsigned char pin, int frequencyInHertz, long timeInMilliseconds) {
-
-  // from http://web.media.mit.edu/~leah/LilyPad/07_sound_code.html
-  int x;
-  long delayAmount = (long)(1000000 / frequencyInHertz);
-  long loopTime = (long)((timeInMilliseconds * 1000) / (delayAmount * 2));
-  for (x = 0; x < loopTime; x++) {
-    digitalWrite(pin, HIGH);
-    delayMicroseconds(delayAmount);
-    digitalWrite(pin, LOW);
-    delayMicroseconds(delayAmount);
-  }
+void beep(const int frequencyInHertz, const long timeInMilliseconds) {
+  tone(PIN_BUZZER, frequencyInHertz, timeInMilliseconds);
 }
 
 // Emit a fairly shrill noise
 void alarm() {
-  beep(PIN_BUZZER, 300, 300);
+  beep(300, 300);
 }
 
 // Emit a fairly rude noise
 void burp() {
-  beep(PIN_BUZZER, 75, 80);
-  beep(PIN_BUZZER, 125, 50);
-  beep(PIN_BUZZER, 75, 80);
+  beep(75, 80);
+  beep(125, 50);
+  beep(75, 80);
+}
+
+// Emit a fairly rude noise
+void chirp() {
+  beep(300, 400);
+  beep(400, 200);
+  beep(500, 100);
 }
 
 void playTune() {
-  beep(PIN_BUZZER, NOTE_C4, 1000);
-  beep(PIN_BUZZER, NOTE_G4, 1000);
-  beep(PIN_BUZZER, NOTE_F4, 250);
-  beep(PIN_BUZZER, NOTE_E4, 250);
-  beep(PIN_BUZZER, NOTE_D4, 250);
-  beep(PIN_BUZZER, NOTE_C5, 1000);
-  beep(PIN_BUZZER, NOTE_G4, 500);
-  beep(PIN_BUZZER, NOTE_F4, 250);
-  beep(PIN_BUZZER, NOTE_E4, 250);
-  beep(PIN_BUZZER, NOTE_D4, 250);
-  beep(PIN_BUZZER, NOTE_C5, 1000);
-  beep(PIN_BUZZER, NOTE_G4, 500);
-  beep(PIN_BUZZER, NOTE_F4, 250);
-  beep(PIN_BUZZER, NOTE_E4, 250);
-  beep(PIN_BUZZER, NOTE_F4, 250);
-  beep(PIN_BUZZER, NOTE_D4, 2000);
+  beep(NOTE_C4, 1000);
+  beep(NOTE_G4, 1000);
+  beep(NOTE_F4, 250);
+  beep(NOTE_E4, 250);
+  beep(NOTE_D4, 250);
+  beep(NOTE_C5, 1000);
+  beep(NOTE_G4, 500);
+  beep(NOTE_F4, 250);
+  beep(NOTE_E4, 250);
+  beep(NOTE_D4, 250);
+  beep(NOTE_C5, 1000);
+  beep(NOTE_G4, 500);
+  beep(NOTE_F4, 250);
+  beep(NOTE_E4, 250);
+  beep(NOTE_F4, 250);
+  beep(NOTE_D4, 2000);
 }
 
 int getLeftPing() {
@@ -529,7 +523,7 @@ int getRightPing() {
   return getPingSensorReading(sonarR);
 }
 
-int _getSensorValue(PingSensorPins sonar) {
+int _getSensorValue(const PingSensorPins sonar) {
   digitalWrite(sonar.trigger_pin, LOW);
   delayMicroseconds(2);
 
@@ -542,6 +536,17 @@ int _getSensorValue(PingSensorPins sonar) {
   int distance = ((duration / 2) / 29.1) * 10;
 
   return distance;
+}
+
+bool getTiltSensorReading() {
+  current_tilt_sensor_value = digitalRead(PIN_TILT);
+  return current_tilt_sensor_value;  
+}
+
+bool hasTiltSensorChanged() {
+  bool prev_tilt_sensor_value = current_tilt_sensor_value;
+  getTiltSensorReading();
+  return (prev_tilt_sensor_value != current_tilt_sensor_value);
 }
 
 int getPingSensorReading(PingSensorPins sonar) {
