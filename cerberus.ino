@@ -622,6 +622,9 @@ void loop() {
     if (!isShining()) {
       shine_brightness = 0;
     }
+    if (hasTiltSensorChanged()) {
+      chirp();
+    }
     if (checkForSleep()) {
       sleep(SLEEP_DURATION_SECS);
     } else {
@@ -633,7 +636,7 @@ void loop() {
     Serial.println("sleeping");
 #endif
     breathe();
-    if (checkForWake() || hasBeenAwoken()) {
+    if (checkForWake() || hasBeenAwoken() || hasTiltSensorChanged()) {
       awaken();
     } else {
       if (timeToSnore()) {
