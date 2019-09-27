@@ -462,6 +462,13 @@ void updateLed() {
   analogWrite(PIN_LED, shine_brightness);
 }
 
+void beep(const int frequencyInHertz, const long timeInMilliseconds, boolean block=false) {
+  tone(PIN_BUZZER, frequencyInHertz, timeInMilliseconds);
+  if (block) {
+    delay(timeInMilliseconds-1);
+  }
+}
+
 /* Make a sleeping sound in sleep mode.
   Since this function blocks, update the breathing state LED */
 void snore() {
@@ -473,10 +480,6 @@ void snore() {
   updateLed();
 }
 
-void beep(const int frequencyInHertz, const long timeInMilliseconds) {
-  tone(PIN_BUZZER, frequencyInHertz, timeInMilliseconds);
-}
-
 // Emit a fairly shrill noise
 void alarm() {
   beep(300, 300);
@@ -484,34 +487,34 @@ void alarm() {
 
 // Emit a fairly rude noise
 void burp() {
-  beep(75, 80);
-  beep(125, 50);
+  beep(75, 80, true);
+  beep(125, 50, true);
   beep(75, 80);
 }
 
-// Emit a fairly rude noise
+// Emit a surprised sound
 void chirp() {
-  beep(300, 400);
-  beep(400, 200);
+  beep(300, 400, true);
+  beep(400, 200, true);
   beep(500, 100);
 }
 
 void playTune() {
-  beep(NOTE_C4, 1000);
-  beep(NOTE_G4, 1000);
-  beep(NOTE_F4, 250);
-  beep(NOTE_E4, 250);
-  beep(NOTE_D4, 250);
-  beep(NOTE_C5, 1000);
-  beep(NOTE_G4, 500);
-  beep(NOTE_F4, 250);
-  beep(NOTE_E4, 250);
-  beep(NOTE_D4, 250);
-  beep(NOTE_C5, 1000);
-  beep(NOTE_G4, 500);
-  beep(NOTE_F4, 250);
-  beep(NOTE_E4, 250);
-  beep(NOTE_F4, 250);
+  beep(NOTE_C4, 1000, true);
+  beep(NOTE_G4, 1000, true);
+  beep(NOTE_F4, 250, true);
+  beep(NOTE_E4, 250, true);
+  beep(NOTE_D4, 250, true);
+  beep(NOTE_C5, 1000, true);
+  beep(NOTE_G4, 500, true);
+  beep(NOTE_F4, 250, true);
+  beep(NOTE_E4, 250, true);
+  beep(NOTE_D4, 250, true);
+  beep(NOTE_C5, 1000, true);
+  beep(NOTE_G4, 500, true);
+  beep(NOTE_F4, 250, true);
+  beep(NOTE_E4, 250, true);
+  beep(NOTE_F4, 250, true);
   beep(NOTE_D4, 2000);
 }
 
@@ -523,7 +526,7 @@ int getRightPing() {
   return getPingSensorReading(sonarR);
 }
 
-int _getSensorValue(const PingSensorPins sonar) {
+int _getPingSensorValue(const PingSensorPins sonar) {
   digitalWrite(sonar.trigger_pin, LOW);
   delayMicroseconds(2);
 
@@ -538,14 +541,14 @@ int _getSensorValue(const PingSensorPins sonar) {
   return distance;
 }
 
-bool getTiltSensorReading() {
+bool _getTiltSensorReading() {
   current_tilt_sensor_value = digitalRead(PIN_TILT);
   return current_tilt_sensor_value;  
 }
 
 bool hasTiltSensorChanged() {
   bool prev_tilt_sensor_value = current_tilt_sensor_value;
-  getTiltSensorReading();
+  _getTiltSensorReading();
   return (prev_tilt_sensor_value != current_tilt_sensor_value);
 }
 
@@ -553,7 +556,7 @@ int getPingSensorReading(PingSensorPins sonar) {
 
   int samples[PING_SENSOR_SAMPLES];
   for (int i = 0; i < PING_SENSOR_SAMPLES; i++) {
-    samples[i] = _getSensorValue(sonar);
+    samples[i] = _getPingSensorValue(sonar);
   }
   int echoTime = smooth(samples, PING_SENSOR_SAMPLES);
   if (echoTime == 0 || echoTime > MAX_PING_SENSOR_DISTANCE) {
