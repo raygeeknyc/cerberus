@@ -1,6 +1,12 @@
 // Cerberus - a two headed robot dog
 
+#include <NewPing.h>
+#include <TimerFreeTone.h>
+#ifdef _SOFTWARESERVO
 #include <Adafruit_SoftServo.h>  // SoftwareServo (works on non PWM pins)
+#else
+#include <Servo.h>  // SoftwareServo (works on non PWM pins) // experimental - not yet working
+#endif
 #include "PingsensorPins.h"
 
 #define MAX_PING_SENSOR_DISTANCE 60
@@ -9,7 +15,7 @@
 // Unused for now
 #define _TRINKET
 // define _DEBUG if you want LOTS of Serial output
-// #define _DEBUG
+//#define _DEBUG
 
 #define BUILTIN_LED 13
 
@@ -60,8 +66,13 @@ const int SNORE_DURATION_MS = SNORE_DURATION_SECS * 1000;
 #define BREATHE_STEP_DUR_MS 50
 int breathe_dir;
 
+#ifdef _SOFTWARESERVO
 Adafruit_SoftServo left_motor;
 Adafruit_SoftServo right_motor;
+#else
+Servo left_motor;
+Servo right_motor;
+#endif
 
 // Define these based on your servos and controller, the values to cause your servos
 // to spin in opposite directions at approx the same speed.
@@ -113,30 +124,43 @@ const int INACTIVITY_TIME_TO_NAP_MS = INACTIVITY_TIME_TO_NAP_SECS * 1000;
 const int ACTIVITY_TIME_TO_NAP_MS =  ACTIVITY_TIME_TO_NAP_SECS * 1000;
 #define SLEEP_DURATION_SECS 15
 
-PingSensorPins sonarL = {PIN_PING_TRIGGER_LEFT, PIN_PING_ECHO_LEFT};
-PingSensorPins sonarR = {PIN_PING_TRIGGER_RIGHT, PIN_PING_ECHO_RIGHT};
+NewPing sonarL = {PIN_PING_TRIGGER_LEFT, PIN_PING_ECHO_LEFT};
+NewPing sonarR = {PIN_PING_TRIGGER_RIGHT, PIN_PING_ECHO_RIGHT};
 
 int current_dir, last_dir;
 int sensor_normalization_delta;
 bool current_tilt_sensor_value;
 
+// this is how often the softwareservo attached devices need a refresh call
+#define MAX_REFRESH_DELAY_MS 18
+
+// delay but refresh the servos every MAX_REFRESH_DELAY_MS
+void delayWithRefresh(const unsigned int dur_ms) {
+  int steps = dur_ms / MAX_REFRESH_DELAY_MS;
+  for (int i=0; i<steps; i++) {
+    delay(MAX_REFRESH_DELAY_MS);
+    refreshServos();
+  }
+  delay(dur_ms % MAX_REFRESH_DELAY_MS);
+  refreshServos();
+}
 /**
    Blink 3-2-1 as a distinctive signature of startup
 */
 void blinkConfirm() {
   digitalWrite(BUILTIN_LED, HIGH);
-  delay(1000);
+  delayWithRefresh(1000);
   digitalWrite(BUILTIN_LED, LOW);
-  delay(500);
+  delayWithRefresh(500);
   digitalWrite(BUILTIN_LED, HIGH);
-  delay(1000);
+  delayWithRefresh(1000);
   digitalWrite(BUILTIN_LED, LOW);
-  delay(500);
+  delayWithRefresh(500);
   digitalWrite(BUILTIN_LED, HIGH);
 
-  delay(1000);
+  delayWithRefresh(1000);
   digitalWrite(BUILTIN_LED, LOW);
-  delay(500);
+  delayWithRefresh(500);
 }
 
 void setup() {
@@ -175,6 +199,9 @@ void setup() {
   playTune();
   digitalWrite(PIN_BUZZER, LOW);
   analogWrite(PIN_LED, 10);
+  #ifdef _DEBUG
+  Serial.println("/setup");
+  #endif
 }
 
 void recordDirection(int dir) {
@@ -217,7 +244,7 @@ void readSensors() {
     prev_distance_l = current_distance_l;
     prev_distance_r = current_distance_r;
     current_distance_r = getRightPing();
-    delay(POST_PING_DELAY_MS);
+    delayWithRefresh(POST_PING_DELAY_MS);
     current_distance_l = getLeftPing();
     ping_delta_l = current_distance_l - prev_distance_l;
     ping_delta_r = current_distance_r - prev_distance_r;
@@ -319,9 +346,9 @@ void withdraw() {
   alarm();
   reverse(DIR_LEFT);
   reverse(DIR_RIGHT);
-  delay(WITHDRAW_DUR_MS);
+  delayWithRefresh(WITHDRAW_DUR_MS);
   turnFrom(DIR_LEFT);
-  delay(TURN_DUR_MS);
+  delayWithRefresh(TURN_DUR_MS);
   stop(DIR_LEFT);
   stop(DIR_RIGHT);
 }
@@ -389,7 +416,7 @@ void turnFrom(const int side) {
 #endif
   fwd(side);
   reverse((side == DIR_LEFT) ? DIR_RIGHT : DIR_LEFT);
-  delay(TURN_DUR_MS);
+  delayWithRefresh(TURN_DUR_MS);
   stop(DIR_LEFT);
   stop(DIR_RIGHT);
 }
@@ -463,9 +490,9 @@ void updateLed() {
 }
 
 void beep(const int frequencyInHertz, const long timeInMilliseconds, boolean block=false) {
-  tone(PIN_BUZZER, frequencyInHertz, timeInMilliseconds);
+  TimerFreeTone(PIN_BUZZER, frequencyInHertz, timeInMilliseconds);
   if (block) {
-    delay(timeInMilliseconds-1);
+    delayWithRefresh(timeInMilliseconds-1);
   }
 }
 
@@ -487,34 +514,34 @@ void alarm() {
 
 // Emit a fairly rude noise
 void burp() {
-  beep(75, 80, true);
-  beep(125, 50, true);
+  beep(75, 80);
+  beep(125, 50);
   beep(75, 80);
 }
 
 // Emit a surprised sound
 void chirp() {
-  beep(300, 400, true);
-  beep(400, 200, true);
+  beep(300, 400);
+  beep(400, 200);
   beep(500, 100);
 }
 
 void playTune() {
-  beep(NOTE_C4, 1000, true);
-  beep(NOTE_G4, 1000, true);
-  beep(NOTE_F4, 250, true);
-  beep(NOTE_E4, 250, true);
-  beep(NOTE_D4, 250, true);
-  beep(NOTE_C5, 1000, true);
-  beep(NOTE_G4, 500, true);
-  beep(NOTE_F4, 250, true);
-  beep(NOTE_E4, 250, true);
-  beep(NOTE_D4, 250, true);
-  beep(NOTE_C5, 1000, true);
-  beep(NOTE_G4, 500, true);
-  beep(NOTE_F4, 250, true);
-  beep(NOTE_E4, 250, true);
-  beep(NOTE_F4, 250, true);
+  beep(NOTE_C4, 1000);
+  beep(NOTE_G4, 1000);
+  beep(NOTE_F4, 250);
+  beep(NOTE_E4, 250);
+  beep(NOTE_D4, 250);
+  beep(NOTE_C5, 1000);
+  beep(NOTE_G4, 500);
+  beep(NOTE_F4, 250);
+  beep(NOTE_E4, 250);
+  beep(NOTE_D4, 250);
+  beep(NOTE_C5, 1000);
+  beep(NOTE_G4, 500);
+  beep(NOTE_F4, 250);
+  beep(NOTE_E4, 250);
+  beep(NOTE_F4, 250);
   beep(NOTE_D4, 2000);
 }
 
@@ -549,27 +576,28 @@ bool _getTiltSensorReading() {
 bool hasTiltSensorChanged() {
   bool prev_tilt_sensor_value = current_tilt_sensor_value;
   _getTiltSensorReading();
+  #ifdef _DEBUG
+  if (prev_tilt_sensor_value != current_tilt_sensor_value) {
+    Serial.println("TiltSensorChanged!");
+  }
+  #endif
   return (prev_tilt_sensor_value != current_tilt_sensor_value);
 }
 
-int getPingSensorReading(PingSensorPins sonar) {
-
-  int samples[PING_SENSOR_SAMPLES];
-  for (int i = 0; i < PING_SENSOR_SAMPLES; i++) {
-    samples[i] = _getPingSensorValue(sonar);
-  }
-  int echoTime = smooth(samples, PING_SENSOR_SAMPLES);
-  if (echoTime == 0 || echoTime > MAX_PING_SENSOR_DISTANCE) {
-#ifdef _DEBUG
+int getPingSensorReading(NewPing sonar) {
+  int echoTime = sonar.ping_median(PING_SAMPLES);
+  int cm = sonar.convert_cm(echoTime);
+  if (cm == 0 || cm > MAX_PING_SENSOR_DISTANCE) {
+    #ifdef _DEBUG
     Serial.println("adjusting distance to max distance");
-#endif
-    echoTime = MAX_PING_SENSOR_DISTANCE;
+    #endif
+    cm = MAX_PING_SENSOR_DISTANCE;
   }
 #ifdef _DEBUG
   Serial.print("Distance ");
-  Serial.println(echoTime);
+  Serial.println(cm);
 #endif
-  return echoTime;
+  return cm;
 }
 
 bool hasBeenAwoken() {
@@ -606,7 +634,15 @@ bool checkForWake() {
   return sleep_until && sleep_until < millis();
 }
 
+void refreshServos() {
+  #ifdef _SOFTWARESERVO
+  left_motor.refresh();
+  right_motor.refresh();
+  #endif
+}
+
 void loop() {
+  refreshServos();
   readSensors();
 #ifdef _DEBUG
   Serial.print("LEFT: ");
@@ -623,6 +659,9 @@ void loop() {
       shine_brightness = 0;
     }
     if (hasTiltSensorChanged()) {
+      stop(DIR_LEFT);
+      stop(DIR_RIGHT);
+      flashLed();
       chirp();
     }
     if (checkForSleep()) {
