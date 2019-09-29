@@ -154,7 +154,7 @@ void setup() {
   stop(DIR_LEFT);
   stop(DIR_RIGHT);
 
-  pinMode(PIN_TILT, INPUT);
+  pinMode(PIN_TILT, INPUT_PULLUP);
   pinMode(PIN_BUZZER, OUTPUT);
   pinMode(PIN_LED, OUTPUT);
   pinMode(PIN_CDS, INPUT);
