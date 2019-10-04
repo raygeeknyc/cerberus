@@ -40,6 +40,8 @@
 #define NOTE_B4 494
 #define NOTE_C5 523
 
+#define ARF_BASE_FREQUENCY 1250
+
 bool wakeup_from_sensors;
 unsigned long time_sleeping, next_ping_at, sleep_until, shine_until, next_breathe_at, last_sensor_activity_at, awake_since, weave_phase_at;
 
@@ -115,7 +117,7 @@ Servo right_motor;
 #define DIR_RIGHT 1
 #define DIR_LEFT 2
 #define DIR_FWD 3
-#define LED_FLASH_DURATION_MS 750
+#define LED_FLASH_DURATION_MS 500
 #define LED_SHINE_DURATION_MS 1500
 #define WITHDRAW_DUR_MS 700
 #define INACTIVITY_TIME_TO_NAP_SECS 15
@@ -131,7 +133,7 @@ int current_dir, last_dir;
 int sensor_normalization_delta;
 bool current_tilt_sensor_value;
 
-// this is how often the softwareservo attached devices need a refresh call
+// this is how often softwareservo attached devices need a refresh call
 #define MAX_REFRESH_DELAY_MS 18
 
 // delay but refresh the servos every MAX_REFRESH_DELAY_MS
@@ -480,6 +482,7 @@ void flashLed() {
   shine_brightness = 255;
   shine_until = millis() + LED_FLASH_DURATION_MS;
 }
+
 void dimLed() {
   shine_brightness = 10;
   shine_until = millis() + LED_SHINE_DURATION_MS;
@@ -519,11 +522,21 @@ void burp() {
   beep(75, 80);
 }
 
+
+void arf() {
+  beep(ARF_BASE_FREQUENCY, 25);
+  for (int i=ARF_BASE_FREQUENCY; i>ARF_BASE_FREQUENCY-20; i-=2)
+    beep(i, 5);
+  beep(int(1.0 * ARF_BASE_FREQUENCY / 5.10) , 80);
+  beep(int(1.0 * ARF_BASE_FREQUENCY / 13.7), 70);
+}
+
 // Emit a surprised sound
 void chirp() {
   beep(300, 400);
   beep(400, 200);
   beep(500, 100);
+  beep(600, 100);
 }
 
 void playTune() {
@@ -662,7 +675,8 @@ void loop() {
       stop(DIR_LEFT);
       stop(DIR_RIGHT);
       flashLed();
-      chirp();
+      arf();
+      flashLed();
     }
     if (checkForSleep()) {
       sleep(SLEEP_DURATION_SECS);
