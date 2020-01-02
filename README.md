@@ -1,5 +1,7 @@
 # Cerberus
 A fun project for an arduino
+![A good doggie](img/frontview.jpg?raw=true "Front View")
+
 
 Components required to implement:
 * 2 Ultrasonic (PING) [sensors](http://www.robotshop.com/en/hc-sr04-ultrasonic-range-finder.html)
