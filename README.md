@@ -1,6 +1,6 @@
 # Cerberus
-A fun project for an arduino
-<img src="img/frontview.jpg" width="30%">
+A fun project for an Arduino
+<p><img src="img/frontview.jpg" width="30%"></p>
 
 
 Components required to implement:
