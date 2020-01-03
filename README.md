@@ -1,6 +1,6 @@
 # Cerberus
 A fun project for an arduino
-![A good doggie](img/frontview.jpg?raw=true "Front View"){:width="200px"}
+<img src="img/frontview.jpg" width="30%">
 
 
 Components required to implement:
