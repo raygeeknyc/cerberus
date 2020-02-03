@@ -1,5 +1,5 @@
 # Cerberus
-A fun project for an Arduino
+A robot dog - a fun project for an Arduino
 <p><img src="img/frontview.jpg" width="30%"></p>
 
 
